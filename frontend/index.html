@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Attendance — Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">🎓</div>
+    <div>
+      <div class="logo-text">AttendAI</div>
+      <div class="logo-sub">Smart Attendance</div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <span class="nav-label">Main</span>
+    <button class="nav-item active" onclick="showPage('home', this)">
+      <span class="nav-icon">🏠</span> Dashboard
+    </button>
+    <button class="nav-item" onclick="showPage('checkin', this)">
+      <span class="nav-icon">📸</span> Mark Attendance
+    </button>
+  </div>
+
+  <div class="nav-section">
+    <span class="nav-label">Management</span>
+    <button class="nav-item" onclick="showPage('enroll', this)">
+      <span class="nav-icon">➕</span> Enroll Student
+    </button>
+    <button class="nav-item" onclick="showPage('students', this)">
+      <span class="nav-icon">👥</span> All Students
+    </button>
+    <button class="nav-item" onclick="showPage('reports', this)">
+      <span class="nav-icon">📊</span> Attendance Sheet
+    </button>
+  </div>
+
+  <div class="nav-section">
+    <span class="nav-label">Tools</span>
+    <button class="nav-item" onclick="exportCSV()">
+      <span class="nav-icon">⬇️</span> Export CSV
+    </button>
+  </div>
+
+  <div class="sidebar-footer">
+    Server: <span id="server-status" style="color:var(--amber)">checking...</span>
+  </div>
+</aside>
+
+<main class="main">
+
+  <!-- HOME -->
+  <div class="page active" id="page-home">
+    <div class="page-header">
+      <div class="page-title">Dashboard</div>
+      <div class="page-date" id="today-date"></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card green">
+        <div class="stat-label">Present Today</div>
+        <div class="stat-value" id="stat-present">—</div>
+        <div class="stat-sub">Checked in</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Absent Today</div>
+        <div class="stat-value" id="stat-absent">—</div>
+        <div class="stat-sub">Not checked in</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">Total Students</div>
+        <div class="stat-value" id="stat-total">—</div>
+        <div class="stat-sub">Enrolled</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-label">Attendance Rate</div>
+        <div class="stat-value" id="stat-rate">—</div>
+        <div class="stat-sub">Today</div>
+      </div>
+    </div>
+    <div class="section-title">Quick Actions</div>
+    <div class="actions-grid">
+      <div class="action-card" onclick="showPage('checkin', document.querySelector('[onclick*=checkin]'))">
+        <span class="action-emoji">📸</span>
+        <div class="action-title">Mark Attendance</div>
+        <div class="action-desc">Open camera and take photo to mark student as present</div>
+      </div>
+      <div class="action-card" onclick="showPage('enroll', document.querySelector('[onclick*=enroll]'))">
+        <span class="action-emoji">➕</span>
+        <div class="action-title">Enroll Student</div>
+        <div class="action-desc">Register a new student by uploading their face photos</div>
+      </div>
+      <div class="action-card" onclick="showPage('reports', document.querySelector('[onclick*=reports]'))">
+        <span class="action-emoji">📊</span>
+        <div class="action-title">Attendance Sheet</div>
+        <div class="action-desc">View and filter full attendance records by date</div>
+      </div>
+      <div class="action-card" onclick="showPage('students', document.querySelector('[onclick*=students]'))">
+        <span class="action-emoji">👥</span>
+        <div class="action-title">All Students</div>
+        <div class="action-desc">View all enrolled students and their details</div>
+      </div>
+      <div class="action-card" onclick="exportCSV()">
+        <span class="action-emoji">⬇️</span>
+        <div class="action-title">Export CSV</div>
+        <div class="action-desc">Download full attendance report as a spreadsheet</div>
+      </div>
+      <div class="action-card" onclick="loadTodayReport()">
+        <span class="action-emoji">🔄</span>
+        <div class="action-title">Refresh Stats</div>
+        <div class="action-desc">Reload today's attendance numbers from the server</div>
+      </div>
+    </div>
+    <div class="section-title">Today's Attendance</div>
+    <div class="table-wrap">
+      <div class="table-header">
+        <div class="table-header-title">Live Records</div>
+        <button class="btn-sm btn-green" onclick="loadTodayReport()">↻ Refresh</button>
+      </div>
+      <table>
+        <thead><tr><th>Student ID</th><th>Name</th><th>Status</th><th>Time</th></tr></thead>
+        <tbody id="home-table-body">
+          <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:32px">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CHECK-IN -->
+  <div class="page" id="page-checkin">
+    <div class="page-header">
+      <div class="page-title">Mark Attendance</div>
+      <div class="page-date" id="checkin-date"></div>
+    </div>
+    <div class="checkin-layout">
+      <div class="camera-card">
+        <div class="camera-view">
+          <video id="video" autoplay playsinline muted></video>
+          <canvas id="canvas" width="640" height="480"></canvas>
+          <div class="camera-overlay"><div class="face-guide"></div></div>
+        </div>
+        <div class="camera-actions">
+          <button class="btn-full" onclick="capture()" style="margin:0">
+            <span class="spinner" id="capture-spinner"></span>
+            <span id="capture-text">📸 &nbsp; Capture & Mark Attendance</span>
+          </button>
+        </div>
+        <div style="padding:0 16px 16px">
+          <div class="alert" id="capture-alert"></div>
+        </div>
+      </div>
+      <div class="checkin-log">
+        <div class="log-header">📋 &nbsp; Today's Check-ins</div>
+        <div class="log-list" id="log-list">
+          <div style="text-align:center;padding:32px;color:var(--muted);font-size:13px">No check-ins yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ENROLL -->
+  <div class="page" id="page-enroll">
+    <div class="page-header"><div class="page-title">Enroll New Student</div></div>
+    <div class="form-card">
+      <div class="form-field">
+        <label class="form-label">Student ID</label>
+        <input class="form-input" type="text" id="e-id" placeholder="e.g. STU001">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Full Name</label>
+        <input class="form-input" type="text" id="e-name" placeholder="e.g. Harendra Singh">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Class / Section</label>
+        <input class="form-input" type="text" id="e-class" placeholder="e.g. 10A">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Face Photos (min 3, recommended 5–10)</label>
+        <div class="upload-zone" onclick="document.getElementById('e-photos').click()">
+          <input type="file" id="e-photos" accept="image/*" multiple style="display:none" onchange="addEnrollPhotos(this)">
+          <div class="upload-icon">📷</div>
+          <div class="upload-text">Click to add photos</div>
+          <div class="upload-hint">Click multiple times to keep adding more</div>
+        </div>
+        <div id="enroll-counter" class="photo-counter warn" style="display:none">
+          <span id="enroll-counter-text"></span>
+        </div>
+        <div id="enroll-preview"></div>
+      </div>
+      <button class="btn-full" id="enroll-btn" onclick="enrollStudent()">
+        <span class="spinner" id="enroll-spinner"></span>
+        <span id="enroll-btn-text">Enroll Student</span>
+      </button>
+      <div class="alert" id="enroll-alert"></div>
+    </div>
+  </div>
+
+  <!-- STUDENTS -->
+  <div class="page" id="page-students">
+    <div class="page-header">
+      <div class="page-title">All Students</div>
+      <button class="btn-sm btn-green" onclick="loadStudents()">↻ Refresh</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Student ID</th><th>Name</th><th>Class</th><th>Enrolled On</th></tr></thead>
+        <tbody id="students-body">
+          <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:32px">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="page" id="page-reports">
+    <div class="page-header"><div class="page-title">Attendance Sheet</div></div>
+    <div class="report-toolbar">
+      <input type="date" id="report-date" onchange="loadReport()">
+      <button class="btn-sm btn-green" onclick="loadReport()">Load</button>
+      <button class="btn-sm btn-outline" onclick="exportCSV()">⬇ Export All CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Student ID</th><th>Name</th><th>Date</th><th>Status</th><th>Check-in Time</th></tr></thead>
+        <tbody id="report-body">
+          <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:32px">Select a date above</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script src="dashboard.js"></script>
+</body>
+</html>
