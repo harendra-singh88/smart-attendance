@@ -557,3 +557,58 @@ for more responsive for the mobile user  */
   .checkin-layout { grid-template-columns: 1fr; }
   .page-title { font-size: 18px; }
 }
+
+
+/* Better focus states for keyboard navigation */
+.nav-item:focus, .btn-full:focus, .form-input:focus {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+/* Better contrast for readability */
+.log-time { font-size: 12px; } /* was 11px - too small */
+
+/* Loading skeleton for better UX */
+@keyframes skeleton {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--surface2) 25%, var(--surface) 50%, var(--surface2) 75%);
+  background-size: 200% 100%;
+  animation: skeleton 1.5s infinite;
+  border-radius: 8px;
+  height: 20px;
+}
+
+
+/* Better button hover effects */
+.btn-full {
+  box-shadow: 0 2px 8px rgba(29, 158, 117, 0.15);
+  transition: all 0.2s ease;
+}
+
+.btn-full:hover:not(:disabled) {
+  box-shadow: 0 4px 16px rgba(29, 158, 117, 0.25);
+  transform: translateY(-1px);
+}
+
+/* Better card hover effects */
+.action-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.action-card:hover {
+  box-shadow: 0 4px 12px rgba(29, 158, 117, 0.15);
+}
+
+/* Add loading state for tables */
+.loading-row {
+  animation: fadeInOut 1s ease-in-out infinite;
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
