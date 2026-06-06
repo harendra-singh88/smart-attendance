@@ -6,8 +6,8 @@ from typing import Tuple, List, Dict
 import tensorflow as tf
 import cv2
 from deepface import DeepFace
-from tensorflow.keras.models import load_model
-from sklearn.preprocessing import normalize
+from tensorflow.keras.models import load_model # type: ignore
+from sklearn.preprocessing import normalize # type: ignore
 
 logger = logging.getLogger(__name__)
 
