@@ -1,0 +1,10 @@
+flask
+flask-cors
+sqlalchemy
+deepface
+numpy
+opencv-python
+pandas
+apscheduler
+python-dotenv
+tf-keras
