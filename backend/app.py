@@ -1,11 +1,15 @@
 import logging
 from flask import Flask
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import date
 
 from backend.config import FLASK_PORT, FLASK_DEBUG, ABSENT_HOUR, ABSENT_MINUTE
 from backend.models import init_db, Session, Attendance, Student
+from backend.routes.auth import auth_bp
+from backend.routes.admin import admin_bp
+from backend.routes.teacher import teacher_bp
 from backend.routes.enroll import enroll_bp
 from backend.routes.attend import attend_bp
 from backend.routes.reports import reports_bp
@@ -22,6 +26,15 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
+# JWT config
+app.config["JWT_SECRET_KEY"] = "attendai-super-secret-key-change-in-production"
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = False   # tokens don't expire (simplify for dev)
+JWTManager(app)
+
+# Register blueprints
+app.register_blueprint(auth_bp)
+app.register_blueprint(admin_bp)
+app.register_blueprint(teacher_bp)
 app.register_blueprint(enroll_bp)
 app.register_blueprint(attend_bp)
 app.register_blueprint(reports_bp)
@@ -32,7 +45,6 @@ def auto_mark_absent():
     """
     Runs daily at ABSENT_HOUR:ABSENT_MINUTE (default 10:05 AM).
     Marks all students who haven't checked in today as absent.
-    Runs 5 minutes AFTER check-in window closes to avoid race conditions.
     """
     session = Session()
     try:
